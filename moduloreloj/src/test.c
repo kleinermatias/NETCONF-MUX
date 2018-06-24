@@ -1,23 +1,23 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/stat.h>
-
 #include <sysrepo.h>
 #include <sysrepo/plugins.h>
 #include <sysrepo/values.h>
-
 #include "common.h"
 #include <time.h>
-#ifndef PLUGIN
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef PLUGIN
 
-const char *yang_model = "pruebilla";
+const char *yang_model = "alarmafulgor";
 const char *entrada_state="";
 const char *salida_state="";
+
+volatile int exit_application = 0;
 
 typedef struct ctx_s {
     const char *yang_model;
@@ -63,7 +63,7 @@ static int rpc_cb(__attribute__((unused)) const char *xpath,
     rc = sr_new_values(1, output);
     CHECK_RET(rc, error, "failed sr_new_values %s", sr_strerror(rc));
     *output_cnt = 1;
-    sr_val_set_xpath(*output, "/pruebilla:call/response");
+    sr_val_set_xpath(*output, "/alarmafulgor:call/response");
     sr_val_set_str_data(*output, SR_STRING_T, buf);
 
 error:
@@ -78,42 +78,37 @@ error:
 
 
 
-static int
-oven_config_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
+/* retrieves & prints current alarma configuration */
+static void
+retrieve_current_config(sr_session_ctx_t *session)
 {
-    int rc;
-    sr_val_t *val;
+    sr_val_t *values = NULL;
+    size_t count = 0;
+    int rc = SR_ERR_OK;
 
-    sr_val_t *val_envio;
-    rc = sr_new_values(1, &val_envio);
+    printf("Configuracion actual de la alarma:\n");
+
+    rc = sr_get_items(session, "/alarmafulgor:alarma/*", &values, &count);
     if (SR_ERR_OK != rc) {
-        return rc;
+        SRP_LOG_ERR("Error by sr_get_items: %s", sr_strerror(rc));
+        return;
     }
-    sr_val_set_xpath(&val_envio[0], "/pruebilla:op-ok/resultado");
-    val_envio[0].type = SR_STRING_T;
+    for (size_t i = 0; i < count; i++){
+        sr_print_val(&values[i]);
+    }
+    sr_free_values(values, count);
+}
+
+
+static int
+alarma_config_change_cb(sr_session_ctx_t *session, const char *module_name, sr_notif_event_t event, void *private_ctx)
+{
     
+    SRP_LOG_DBG_MSG("La configuracion de la alarma cambio.");
 
-    /* get the value from sysrepo, we do not care if the value did not change in our case */
-    rc = sr_get_item(session, "/pruebilla:comando/entrada", &val);
-    if (rc != SR_ERR_OK) {
-        goto sr_error;
-    }
-
-    if (0 == strcmp("ip a", val->data.string_val)){
-            entrada_state=val->data.string_val;
-            printf("Vale : %s\n", entrada_state);
-            val_envio[0].data.string_val = entrada_state;
-            rc = sr_event_notif_send(session, "/pruebilla:op-ok/entrada", val_envio, 1, SR_EV_NOTIF_DEFAULT);
-    }
-
-    sr_free_val(val);
-    sr_free_val(val_envio);
+    retrieve_current_config(session);
 
     return SR_ERR_OK;
-
-sr_error:
-    SRP_LOG_ERR("OVEN: Oven config change callback failed: %s.", sr_strerror(rc));
-    return rc;
 
 
 }
@@ -130,11 +125,11 @@ oven_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *pr
         return rc;
     }
 
-    sr_val_set_xpath(&vals[0], "/pruebilla:comando-state/entrada");
+    sr_val_set_xpath(&vals[0], "/alarmafulgor:comando-state/entrada");
     vals[0].type = SR_STRING_T;
     vals[0].data.string_val = entrada_state;
 
-    sr_val_set_xpath(&vals[1], "/pruebilla:comando-state/salida");
+    sr_val_set_xpath(&vals[1], "/alarmafulgor:comando-state/salida");
     vals[1].type = SR_STRING_T;
     vals[1].data.string_val = salida_state;
 
@@ -157,25 +152,27 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     *private_ctx = ctx;
 
 
-    /* subscribe for pruebilla module changes - also causes startup pruebilla data to be copied into running and enabling the module */
-    rc = sr_module_change_subscribe(session, "pruebilla", oven_config_change_cb, NULL, 2,
+    /* subscribe for alarmafulgor module changes - also causes startup alarmafulgor data to be copied into running and enabling the module */
+    rc = sr_module_change_subscribe(session, "alarmafulgor", alarma_config_change_cb, NULL, 2,
             SR_SUBSCR_APPLY_ONLY, &ctx->sub);
     if (rc != SR_ERR_OK) {
         goto error;
     }
 
     /* subscribe as state data provider for the oven state data */
-    rc = sr_dp_get_items_subscribe(session, "/pruebilla:comando-state", oven_state_cb, NULL, SR_SUBSCR_CTX_REUSE, &ctx->sub);
+    //rc = sr_dp_get_items_subscribe(session, "/alarmafulgor:reloj-sistema", oven_state_cb, NULL, SR_SUBSCR_CTX_REUSE, &ctx->sub);
+    //if (rc != SR_ERR_OK) {
+    //    goto error;
+    //}
+
+
+    /* Subscripcion para la rpc */
+    rc = sr_rpc_subscribe(session, "/alarmafulgor:alarmaconfig", rpc_cb, (void *) session, SR_SUBSCR_CTX_REUSE, &ctx->sub);
     if (rc != SR_ERR_OK) {
         goto error;
     }
 
-
-    /* subscribe for handling RPC */
-    rc = sr_rpc_subscribe(session, "/pruebilla:call", rpc_cb, (void *) session, SR_SUBSCR_CTX_REUSE, &ctx->sub);
-    CHECK_RET(rc, error, "failed sr_rpc_subscribe: %s", sr_strerror(rc));
-
-    INF_MSG("Plugin initialized successfully");
+    INF_MSG("Plugin correctamente inicializado.");
 
     return SR_ERR_OK;
 
@@ -185,23 +182,28 @@ error:
         sr_unsubscribe(ctx->sess, ctx->sub);
         ctx->sub = NULL;
     }
-
     return rc;
 }
+
 
 void sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx)
 {
     INF("Plugin cleanup called, private_ctx is %s available.", private_ctx ? "" : "not");
+    
     if (!private_ctx)
         return;
 
     ctx_t *ctx = private_ctx;
-    if (NULL == ctx) {
+   
+    if (NULL == ctx) 
+    {
         return;
     }
-    if (NULL != ctx->sub) {
+    if (NULL != ctx->sub) 
+    {
         sr_unsubscribe(session, ctx->sub);
     }
+
     free(ctx);
 
     DBG_MSG("Plugin cleaned-up successfully");
@@ -209,7 +211,6 @@ void sr_plugin_cleanup_cb(sr_session_ctx_t *session, void *private_ctx)
 
 
 
-volatile int exit_application = 0;
 
 static void sigint_handler(__attribute__((unused)) int signum)
 {
@@ -217,9 +218,11 @@ static void sigint_handler(__attribute__((unused)) int signum)
     exit_application = 1;
 }
 
+
+
 int main()
 {
-    INF_MSG("Plugin application mode initialized");
+    INF_MSG("Aplicacion inicializada. Intentando conectar con sysrepo");
     sr_conn_ctx_t *connection = NULL;
     sr_session_ctx_t *session = NULL;
     void *private_ctx = NULL;
@@ -230,10 +233,8 @@ int main()
     CHECK_RET(rc, cleanup, "Error by sr_connect: %s", sr_strerror(rc));
 
     /* start session */
-    rc = sr_session_start(connection, SR_DS_CANDIDATE, SR_SESS_DEFAULT, &session);
-    CHECK_RET(rc, cleanup, "Error by sr_session_start: %s", sr_strerror(rc));
-
-    rc = sr_session_switch_ds(session, SR_DS_CANDIDATE);
+    rc = sr_session_start(connection, SR_DS_RUNNING, SR_SESS_DEFAULT, &session);
+    CHECK_RET(rc, cleanup, "Error by sr_session_start: %s", sr_strerror(rc));  
     
     rc = sr_plugin_init_cb(session, &private_ctx);
     CHECK_RET(rc, cleanup, "Error by sr_plugin_init_cb: %s", sr_strerror(rc));
