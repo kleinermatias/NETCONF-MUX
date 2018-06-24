@@ -167,10 +167,10 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
 
     /* Subscripcion para la rpc */
-    rc = sr_rpc_subscribe(session, "/alarmafulgor:alarmaconfig", rpc_cb, (void *) session, SR_SUBSCR_CTX_REUSE, &ctx->sub);
-    if (rc != SR_ERR_OK) {
-        goto error;
-    }
+    //rc = sr_rpc_subscribe(session, "/alarmafulgor:alarmaconfig", rpc_cb, (void *) session, SR_SUBSCR_CTX_REUSE, &ctx->sub);
+    //if (rc != SR_ERR_OK) {
+    //    goto error;
+    //}
 
     INF_MSG("Plugin correctamente inicializado.");
 
