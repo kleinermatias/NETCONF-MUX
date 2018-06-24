@@ -20,6 +20,11 @@ const char *salida_state="";
 
 volatile int exit_application = 0;
 
+volatile unsigned int hora;
+volatile unsigned int minuto;
+volatile unsigned int segundo;
+
+
 typedef struct ctx_s {
     const char *yang_model;
     sr_session_ctx_t *sess;
@@ -139,15 +144,15 @@ reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *p
 
     sr_val_set_xpath(&vals[0], "/alarmafulgor:reloj-sistema/hora-sistema");
     vals[0].type = SR_UINT8_T;
-    vals[0].data.uint8_val = 9;
+    vals[0].data.uint8_val = hora;
 
     sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/minuto-sistema");
     vals[1].type = SR_UINT8_T;
-    vals[1].data.uint8_val = 8;
+    vals[1].data.uint8_val = minuto;
 
     sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/segundo-sistema");
     vals[2].type = SR_UINT8_T;
-    vals[2].data.uint8_val = 7;
+    vals[2].data.uint8_val = segundo;
 
     *values = vals;
     *values_cnt = 3;
@@ -160,6 +165,13 @@ reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *p
 
 int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 {
+
+
+	hora=3;
+	minuto=44;
+	segundo=5;
+
+
     int rc = SR_ERR_OK;
 
     /* INF("sr_plugin_init_cb for sysrepo-plugin-dt-network"); */
