@@ -1,0 +1,7 @@
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/install.dir
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/list_install_components.dir
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/rebuild_cache.dir
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/sysrepo-plugin-dt-test.dir
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/install/strip.dir
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/install/local.dir
+/home/osboxes/Documents/test-plugin/build/CMakeFiles/edit_cache.dir

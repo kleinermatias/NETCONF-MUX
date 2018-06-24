@@ -1,0 +1,6 @@
+<comando xmlns="urn:ietf:params:xml:ns:yang:pruebilla">
+  <entrada>nada</entrada>
+  <salida>nada</salida>
+  <booleano>false</booleano>
+  <numero>5</numero>
+</comando>

@@ -1,0 +1,124 @@
+module pruebilla {
+
+    namespace "urn:ietf:params:xml:ns:yang:pruebilla";
+
+    prefix "ts-pr";
+
+    description
+        "This module is used for Sysrepo plugin testing.";
+
+    revision "2018-02-20" {
+        description
+            "Version 0.1.0";
+    }
+
+    typedef rango {
+        description "rango valido prueba.";
+        type uint8 {
+            range "0..250";
+        }
+    }
+
+    container comando {
+        description "Configuration container of the oven.";
+
+        leaf entrada {
+            description "Main switch determining whether the oven is on or off.";
+            type string;
+            default "nada";
+        }
+
+        leaf salida {
+            description "Main switch determining whether the oven is on or off.";
+            type string;
+            default "nada";
+        }
+
+
+        leaf booleano {
+            description "Main switch determining whether the oven is on or off.";
+            type boolean;
+            default false;
+        }
+
+        
+        leaf numero {
+            description "Slider for configuring the desired temperature.";
+            type rango;
+            default 0;
+        }
+    }
+
+    container comando-state {
+        description "State data container of the oven.";
+        config false;
+
+        leaf entrada {
+            description "Ultimo valor entrada";
+            type string;
+        }
+
+        leaf salida {
+            description "Ultimo valor salida";
+            type string;
+        }
+    }
+
+    rpc call {
+
+        input {
+            leaf command {
+                type string;
+            }
+        }
+
+        output {
+            leaf response {
+                type string;
+            }
+        }
+    }
+
+    
+
+    rpc insert-food {
+        description "Operation to order the oven to put the prepared food inside.";
+
+        input {
+            leaf time {
+                description "Parameter determining when to perform the operation.";
+                type enumeration {
+                    enum now {
+                        description "Put the food in the oven immediately.";
+                    }
+                    enum on-oven-ready {
+                        description
+                            "Put the food in once the temperature inside
+                             the oven is at least the configured one. If it
+                             is already, the behaviour is similar to 'now'.";
+                    }
+                }
+            }
+        }
+    
+    }
+
+    rpc remove-food {
+        description "Operation to order the oven to take the food out.";
+    }
+
+
+    notification op-ok {
+        description
+            "salio bien";
+            leaf resultado {
+                type string;
+            }
+    }
+
+
+    notification op-err {
+        description
+            "salio mal";
+    }
+}

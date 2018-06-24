@@ -1,0 +1,1 @@
+/usr/bin/cc   -std=gnu11 -Wall   CMakeFiles/sysrepo-plugin-dt-test.dir/src/test.c.o  -o sysrepo-plugin-dt-test -rdynamic /usr/local/lib/libsysrepo.so -Wl,-rpath,/usr/local/lib: 
