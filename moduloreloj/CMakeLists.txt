@@ -5,6 +5,7 @@ set(PLUGIN 0 CACHE BOOL "Build a plugin.")
 PROJECT(sysrepo-plugin-dt-test)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 -Wall")
+set(CMAKE_REQUIRED_LIBRARIES pthread)
 
 set(SOURCES
 	src/test.c)
@@ -21,5 +22,5 @@ set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${CMAKE_PROJE
 
 # dependencies - sysrepo
 find_package(SYSREPO REQUIRED)
-target_link_libraries(${CMAKE_PROJECT_NAME} ${SYSREPO_LIBRARIES})
+target_link_libraries(${CMAKE_PROJECT_NAME} ${SYSREPO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} -lpthread)
 include_directories(${SYSREPO_INCLUDE_DIRS})

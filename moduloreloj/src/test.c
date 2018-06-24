@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <pthread.h>
 
 #ifndef PLUGIN
 
@@ -19,17 +19,76 @@ const char *entrada_state="";
 const char *salida_state="";
 
 volatile int exit_application = 0;
-
+volatile pthread_t alarma_tid;
 volatile unsigned int hora;
 volatile unsigned int minuto;
 volatile unsigned int segundo;
 
+volatile unsigned int hora_alarma;
+volatile unsigned int minuto_alarma;
+volatile unsigned int segundo_alarma;
+volatile char *ringtone;
+
+sr_session_ctx_t *sess;
 
 typedef struct ctx_s {
     const char *yang_model;
     sr_session_ctx_t *sess;
     sr_subscription_ctx_t *sub;
 } ctx_t;
+
+
+
+static void *
+oven_thread(void *arg)
+{
+    int rc;
+    rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    char *temp = NULL;
+    char buf[100] = {0};
+    char *response = NULL;
+    unsigned int size = 1;
+    unsigned int strlength;
+    
+    strcpy(buf, "tarado e");
+    strlength = strlen(buf);
+    temp = realloc(response, size + strlength);
+    response = temp;
+    strcpy(response + size - 1, buf);
+    size += strlength;
+    sr_val_t values[1];
+    values[0].xpath = "/alarmafulgor:sonido/source/ringtone";
+    values[0].type = SR_STRING_T;
+    values[0].data.string_val = response;
+
+    while (alarma_tid) {
+        time_t rawtime;
+        struct tm *info;
+        char buffer[80];
+        time( &rawtime );
+        info = localtime( &rawtime );
+        strftime(buffer,80,"%x - %I:%M%p", info);
+        hora=info->tm_hour;
+        minuto=info->tm_min;
+        segundo=info->tm_sec;
+        if(hora==hora_alarma && minuto==minuto_alarma && segundo==segundo_alarma)
+        {   
+            printf("%s\n", "ENTRO");
+            rc = sr_event_notif_send(sess, "/alarmafulgor:sonido", values, 1, SR_EV_NOTIF_DEFAULT);
+                    if (rc != SR_ERR_OK) {
+                        SRP_LOG_ERR("OVEN: Oven-ready notification generation failed: %s.", sr_strerror(rc));
+            
+            }
+            sleep(0.9);
+            alarma_tid=0;
+            return NULL; 
+        }
+        sleep(0.9);
+    }
+    return NULL;
+}
+
+
 
 static int rpc_cb(__attribute__((unused)) const char *xpath,
                   const sr_val_t *input,
@@ -38,23 +97,47 @@ static int rpc_cb(__attribute__((unused)) const char *xpath,
                   size_t *output_cnt,
                   __attribute__((unused)) void *private_ctx)
 {
-    
     int rc = SR_ERR_OK;
-    int ret;
     char *temp = NULL;
     char buf[100] = {0};
     char *response = NULL;
     unsigned int size = 1;
     unsigned int strlength;
-
+    void *res;
     CHECK_NULL_MSG(input, &rc, error, "input is empty");
 
     
-    if (0 == strcmp("activar", input[0].data.string_val)){
-            strcpy(buf, "ACTIVO");
+    if (0 == strcmp("activar", input[0].data.string_val))
+    {
+        if (alarma_tid == 0) {
+        /* the oven should be turned on and is not (create the oven thread) */
+        rc = pthread_create((pthread_t *)&alarma_tid, NULL, oven_thread, NULL);
+        if (rc != 0) {
+            goto error;
+            }
+        } 
+        strcpy(buf, "ACTIVO");
     }
-    else
-    	strcpy(buf, "DESACTIVO");
+
+    else{
+        if (alarma_tid != 0) {
+        /* the oven should be turned off but is on (stop the oven thread) */
+        rc = pthread_cancel(alarma_tid);
+        if (rc != 0) {
+            goto error;
+        }
+        rc = pthread_join(alarma_tid, &res);
+       if (rc != 0) {
+            goto error;
+        }
+
+       if (res == PTHREAD_CANCELED){
+        printf("main(): thread was canceled\n");
+        alarma_tid=0;
+    }
+        strcpy(buf, "DESACTIVO");
+    }
+}
 
     
     
@@ -64,7 +147,7 @@ static int rpc_cb(__attribute__((unused)) const char *xpath,
     response = temp;
     strcpy(response + size - 1, buf);
     size += strlength;
-   	
+    
     rc = sr_new_values(1, output);
     CHECK_RET(rc, error, "failed sr_new_values %s", sr_strerror(rc));
     *output_cnt = 1;
@@ -108,6 +191,31 @@ alarma_config_change_cb(sr_session_ctx_t *session, const char *module_name, sr_n
     
     SRP_LOG_DBG_MSG("La configuracion de la alarma cambio.");
 
+
+    int rc;
+    sr_val_t *val;
+
+
+    /* get the value from sysrepo, we do not care if the value did not change in our case */
+    rc = sr_get_item(session, "/alarmafulgor:alarma/horas", &val);
+    hora_alarma = val->data.uint8_val;
+    sr_free_val(val);
+
+    /* get the value from sysrepo, we do not care if the value did not change in our case */
+    rc = sr_get_item(session, "/alarmafulgor:alarma/minutos", &val);
+    minuto_alarma = val->data.uint8_val;
+    sr_free_val(val);
+
+    /* get the value from sysrepo, we do not care if the value did not change in our case */
+    rc = sr_get_item(session, "/alarmafulgor:alarma/segundos", &val);
+    segundo_alarma = val->data.uint8_val;
+    sr_free_val(val);
+
+    /* get the value from sysrepo, we do not care if the value did not change in our case */
+    rc = sr_get_item(session, "/alarmafulgor:alarma/segundos", &val);
+    ringtone = val->data.string_val;
+    sr_free_val(val);
+
     retrieve_current_config(session);
 
     return SR_ERR_OK;
@@ -119,21 +227,20 @@ static int
 reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
 {
 
-	time_t rawtime;
-	struct tm *info;
-	char buffer[80];
+    time_t rawtime;
+    struct tm *info;
+    char buffer[80];
 
-	time( &rawtime );
+    time( &rawtime );
 
-	info = localtime( &rawtime );
+    info = localtime( &rawtime );
 
-	strftime(buffer,80,"%x - %I:%M%p", info);
-	printf("Formatted date & time : |%s|\n", buffer );
+    strftime(buffer,80,"%x - %I:%M%p", info);
 
 
-	hora=3;
-	minuto=44;
-	segundo=5;
+    hora=info->tm_hour;
+    minuto=info->tm_min;
+    segundo=info->tm_sec;
     
     sr_val_t *vals;
     int rc;
@@ -145,15 +252,15 @@ reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *p
         return rc;
     }
 
-    sr_val_set_xpath(&vals[0], "/alarmafulgor:reloj-sistema/hora-sistema");
+    sr_val_set_xpath(&vals[0], "/alarmafulgor:reloj-sistema/horasis");
     vals[0].type = SR_UINT8_T;
     vals[0].data.uint8_val = hora;
 
-    sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/minuto-sistema");
+    sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/minutosis");
     vals[1].type = SR_UINT8_T;
     vals[1].data.uint8_val = minuto;
 
-    sr_val_set_xpath(&vals[2], "/alarmafulgor:reloj-sistema/segundo-sistema");
+    sr_val_set_xpath(&vals[2], "/alarmafulgor:reloj-sistema/segundosis");
     vals[2].type = SR_UINT8_T;
     vals[2].data.uint8_val = segundo;
 
@@ -203,6 +310,7 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     if (rc != SR_ERR_OK) {
         goto error;
     }
+
 
     INF_MSG("Plugin correctamente inicializado.");
 
@@ -268,7 +376,9 @@ int main()
     rc = sr_session_start(connection, SR_DS_RUNNING, SR_SESS_DEFAULT, &session);
     CHECK_RET(rc, cleanup, "Error by sr_session_start: %s", sr_strerror(rc));  
     
-    rc = sr_plugin_init_cb(session, &private_ctx);
+    sess=session;
+
+    rc = sr_plugin_init_cb(sess, &private_ctx);
     CHECK_RET(rc, cleanup, "Error by sr_plugin_init_cb: %s", sr_strerror(rc));
 
     /* loop until ctrl-c is pressed / SIGINT is received */

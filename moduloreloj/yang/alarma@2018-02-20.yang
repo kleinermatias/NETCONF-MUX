@@ -106,11 +106,11 @@ module alarmafulgor {
 
 
     notification sonido {
-        description
-            "Notificacion cuando suena la alarma";
-            leaf notif {
-                type string;
-            }
+		container source {
+			leaf ringtone {
+			type string;
+			}
+		}
     }
 
 }
