@@ -108,7 +108,8 @@ module alarmafulgor {
     notification sonido {
 		container source {
 			leaf ringtone {
-			type string;
+				type string;
+				mandatory "true";
 			}
 		}
     }
