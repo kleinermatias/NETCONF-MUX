@@ -1,0 +1,6 @@
+<alarma xmlns="urn:ietf:params:xml:ns:yang:alarmafulgor">
+  <horas>0</horas>
+  <minutos>0</minutos>
+  <segundos>0</segundos>
+  <ringtone>movistar por defecto</ringtone>
+</alarma>

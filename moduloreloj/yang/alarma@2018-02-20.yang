@@ -1,0 +1,116 @@
+module alarmafulgor {
+
+    namespace "urn:ietf:params:xml:ns:yang:alarmafulgor";
+
+    prefix "rf-ar";
+
+    description
+        "Modulo alarma para ejemplo NETCONF";
+
+    revision "2018-06-24" {
+        description
+            "Version 1.0.0";
+    }
+
+    typedef hora {
+        description "Las horas tendran un rango de valor de 0 a 23.";
+        type uint8 {
+            range "0..24";
+        }
+    }
+
+    typedef minuto {
+        description "Los minutos tendran un rango de valor de 0 a 59. Este tipo definido se podria reutilizar para los segundos,
+        			pero a findes de hacerlo modular por si desea cambiarse se crea otro tipo especial para los segundos.";
+        type uint8 {
+            range "0..60";
+        }
+    }
+
+    typedef segundo {
+        description "Rango de valores validos para los segundos.";
+        type uint8 {
+            range "0..60";
+        }
+    }
+
+    container alarma {
+        description "Contenedor de la configuracion del reloj";
+
+        leaf horas {
+            description "Hora a la que se desea suene alarma.";
+            type hora;
+        }
+
+        leaf minutos {
+            description "Minuto en el que se desea que suene alarma.";
+            type minuto;
+        }
+
+
+        leaf segundos {
+            description "Segundo en el que se desea que suene alarma.";
+            type segundo;
+        }
+
+        
+        leaf ringtone {
+            description "Ringtone con el que suena la alarma";
+            type string;
+            
+        }
+    }
+
+    container reloj-sistema {
+        description "Representa a datos de estados del sistema la cual obtiene la hora del dispositivo.
+        			Estos datos no se encuentran en ningun datastore, puesto que no son configurables y como dijimos,
+        			representan datos de estado. Cuando la hora configurada en alarma llegue a ser igual a la del sistema,
+        			sonara una alarma.";
+
+        config false;
+
+        leaf hora-sistema {
+            description "Ultimo valor entrada";
+            type hora;
+        }
+
+        leaf minuto-sistema {
+            description "Ultimo valor salida";
+            type minuto;
+        }
+
+        leaf segundo-sistema {
+            description "Ultimo valor salida";
+            type segundo;
+        }
+
+
+    }
+
+    rpc alarmaconfig {
+    	
+    	description "RPC que activa/desactiva la alarma segun el string enviado";
+
+        input {
+            leaf comando {
+                type string;
+            }
+        }
+
+        output {
+            leaf respuesta {
+                type string;
+            }
+        }
+    }
+
+
+    notification sonido {
+        description
+            "Notificacion cuando suena la alarma";
+            leaf notif {
+                type string;
+            }
+    }
+
+}
