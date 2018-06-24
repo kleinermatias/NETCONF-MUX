@@ -35,24 +35,30 @@ static int rpc_cb(__attribute__((unused)) const char *xpath,
     
     int rc = SR_ERR_OK;
     int ret;
+    char *temp = NULL;
+    char buf[100] = {0};
     char *response = NULL;
+    unsigned int size = 1;
+    unsigned int strlength;
+
     CHECK_NULL_MSG(input, &rc, error, "input is empty");
 
     
-    
-    ret = strcmp("activar", input[0].data.string_val);
+    if (0 == strcmp("activar", input[0].data.string_val)){
+            strcpy(buf, "ACTIVO");
+    }
+    else
+    	strcpy(buf, "DESACTIVO");
 
-   	if(ret == 0) 
-   	{
-   		response="activo";
-      	printf("iguales");
-   	}
-
-   	else {
-   		response="desactivo";
-      	printf("no iguales");
-   	}
     
+    
+    strlength = strlen(buf);
+    temp = realloc(response, size + strlength);
+    CHECK_NULL(temp, &rc, error, "failed realloc for command: \"%s\"", input[0].data.string_val);
+    response = temp;
+    strcpy(response + size - 1, buf);
+    size += strlength;
+   	
     rc = sr_new_values(1, output);
     CHECK_RET(rc, error, "failed sr_new_values %s", sr_strerror(rc));
     *output_cnt = 1;
