@@ -32,44 +32,34 @@ static int rpc_cb(__attribute__((unused)) const char *xpath,
                   size_t *output_cnt,
                   __attribute__((unused)) void *private_ctx)
 {
-    int rc = SR_ERR_OK;
-    FILE *f = NULL;
     
-    char buf[100] = {0};
+    int rc = SR_ERR_OK;
+    int ret;
     char *response = NULL;
-    char *temp = NULL;
-    unsigned int size = 1;
-    unsigned int strlength;
-    char *hola="hola";
     CHECK_NULL_MSG(input, &rc, error, "input is empty");
 
-    f = popen(input[0].data.string_val, "r");
-    CHECK_NULL(f, &rc, error, "failed to run command: \"%s\"", input[0].data.string_val);
     
-    fgets(buf,sizeof(buf),f);
+    
+    ret = strcmp("activar", input[0].data.string_val);
 
-    //while (fgets(buf, sizeof(buf), f) != NULL) {
-    //    strlength = strlen(buf);
-    //    temp = realloc(response, size + strlength);
-    //    CHECK_NULL(temp, &rc, error, "failed realloc for command: \"%s\"", input[0].data.string_val);
-    //    response = temp;
-    //    strcpy(response + size - 1, buf);
-    //    size += strlength;
-    //}
+   	if(ret == 0) 
+   	{
+   		response="activo";
+      	printf("iguales");
+   	}
+
+   	else {
+   		response="desactivo";
+      	printf("no iguales");
+   	}
     
-    entrada_state=input[0].data.string_val;
-    
-    salida_state=hola;
     rc = sr_new_values(1, output);
     CHECK_RET(rc, error, "failed sr_new_values %s", sr_strerror(rc));
     *output_cnt = 1;
-    sr_val_set_xpath(*output, "/alarmafulgor:call/response");
-    sr_val_set_str_data(*output, SR_STRING_T, buf);
+    sr_val_set_xpath(*output, "/alarmafulgor:alarmaconfig/respuesta");
+    sr_val_set_str_data(*output, SR_STRING_T, response);
 
 error:
-    if (f) {
-        pclose(f);
-    }
     if (response) {
         free(response);
     }
@@ -167,10 +157,10 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 
 
     /* Subscripcion para la rpc */
-    //rc = sr_rpc_subscribe(session, "/alarmafulgor:alarmaconfig", rpc_cb, (void *) session, SR_SUBSCR_CTX_REUSE, &ctx->sub);
-    //if (rc != SR_ERR_OK) {
-    //    goto error;
-    //}
+    rc = sr_rpc_subscribe(session, "/alarmafulgor:alarmaconfig", rpc_cb, (void *) session, SR_SUBSCR_CTX_REUSE, &ctx->sub);
+    if (rc != SR_ERR_OK) {
+        goto error;
+    }
 
     INF_MSG("Plugin correctamente inicializado.");
 
