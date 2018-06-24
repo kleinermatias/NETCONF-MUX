@@ -203,16 +203,25 @@ alarma_config_change_cb(sr_session_ctx_t *session, const char *module_name, sr_n
 
     /* get the value from sysrepo, we do not care if the value did not change in our case */
     rc = sr_get_item(session, "/alarmafulgor:alarma/minutos", &val);
+    if (SR_ERR_OK != rc) {
+        return rc;
+    }
     minuto_alarma = val->data.uint8_val;
     sr_free_val(val);
 
     /* get the value from sysrepo, we do not care if the value did not change in our case */
     rc = sr_get_item(session, "/alarmafulgor:alarma/segundos", &val);
+    if (SR_ERR_OK != rc) {
+        return rc;
+    }
     segundo_alarma = val->data.uint8_val;
     sr_free_val(val);
 
     /* get the value from sysrepo, we do not care if the value did not change in our case */
     rc = sr_get_item(session, "/alarmafulgor:alarma/segundos", &val);
+    if (SR_ERR_OK != rc) {
+        return rc;
+    }
     ringtone = val->data.string_val;
     sr_free_val(val);
 
