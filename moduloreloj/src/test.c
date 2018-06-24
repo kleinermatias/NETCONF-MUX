@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #ifndef PLUGIN
 
 const char *yang_model = "alarmafulgor";
@@ -105,17 +106,26 @@ alarma_config_change_cb(sr_session_ctx_t *session, const char *module_name, sr_n
     retrieve_current_config(session);
 
     return SR_ERR_OK;
-
-
 }
 
+
+
 static int
-oven_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
+reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
 {
+
+	time_t tiempo = time(0);
+	struct tm *tlocal = localtime(&tiempo);
+	char output[128];
+	strftime(output,128,"%H:%M:%S",tlocal);
+	printf("%s\n",output);
+
+    /*
     sr_val_t *vals;
     int rc;
-
+*/
     /* convenient functions such as this can be found in sysrepo/values.h */
+  /*
     rc = sr_new_values(2, &vals);
     if (SR_ERR_OK != rc) {
         return rc;
@@ -133,7 +143,10 @@ oven_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *pr
     *values_cnt = 2;
 
     return SR_ERR_OK;
+*/
 }
+
+
 
 int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 {
@@ -156,10 +169,10 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
     }
 
     /* subscribe as state data provider for the oven state data */
-    //rc = sr_dp_get_items_subscribe(session, "/alarmafulgor:reloj-sistema", oven_state_cb, NULL, SR_SUBSCR_CTX_REUSE, &ctx->sub);
-    //if (rc != SR_ERR_OK) {
-    //    goto error;
-    //}
+    rc = sr_dp_get_items_subscribe(session, "/alarmafulgor:reloj-sistema", reloj_state_cb, NULL, SR_SUBSCR_CTX_REUSE, &ctx->sub);
+    if (rc != SR_ERR_OK) {
+        goto error;
+    }
 
 
     /* Subscripcion para la rpc */
