@@ -114,36 +114,46 @@ static int
 reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *private_ctx)
 {
 
-	time_t tiempo = time(0);
-	struct tm *tlocal = localtime(&tiempo);
-	char output[128];
-	strftime(output,128,"%H:%M:%S",tlocal);
-	printf("%s\n",output);
+	time_t rawtime;
+	struct tm *info;
+	char buffer[80];
 
-    /*
+	time( &rawtime );
+
+	info = localtime( &rawtime );
+
+	strftime(buffer,80,"%x - %I:%M%p", info);
+	printf("Formatted date & time : |%s|\n", buffer );
+
+
+    
     sr_val_t *vals;
     int rc;
-*/
+
     /* convenient functions such as this can be found in sysrepo/values.h */
-  /*
-    rc = sr_new_values(2, &vals);
+  
+    rc = sr_new_values(3, &vals);
     if (SR_ERR_OK != rc) {
         return rc;
     }
 
-    sr_val_set_xpath(&vals[0], "/alarmafulgor:comando-state/entrada");
-    vals[0].type = SR_STRING_T;
-    vals[0].data.string_val = entrada_state;
+    sr_val_set_xpath(&vals[0], "/alarmafulgor:reloj-sistema/hora-sistema");
+    vals[0].type = SR_UINT8_T;
+    vals[0].data.uint8_val = 9;
 
-    sr_val_set_xpath(&vals[1], "/alarmafulgor:comando-state/salida");
-    vals[1].type = SR_STRING_T;
-    vals[1].data.string_val = salida_state;
+    sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/minuto-sistema");
+    vals[1].type = SR_UINT8_T;
+    vals[1].data.uint8_val = 8;
+
+    sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/segundo-sistema");
+    vals[2].type = SR_UINT8_T;
+    vals[2].data.uint8_val = 7;
 
     *values = vals;
-    *values_cnt = 2;
+    *values_cnt = 3;
 
     return SR_ERR_OK;
-*/
+
 }
 
 
