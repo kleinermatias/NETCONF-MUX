@@ -69,17 +69,17 @@ module alarmafulgor {
 
         config false;
 
-        leaf hora-sistema {
+        leaf horasis {
             description "Ultimo valor entrada";
             type hora;
         }
 
-        leaf minuto-sistema {
+        leaf minutosis {
             description "Ultimo valor salida";
             type minuto;
         }
 
-        leaf segundo-sistema {
+        leaf segundosis {
             description "Ultimo valor salida";
             type segundo;
         }

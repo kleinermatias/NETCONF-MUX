@@ -131,6 +131,9 @@ reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *p
 	printf("Formatted date & time : |%s|\n", buffer );
 
 
+	hora=3;
+	minuto=44;
+	segundo=5;
     
     sr_val_t *vals;
     int rc;
@@ -150,7 +153,7 @@ reloj_state_cb(const char *xpath, sr_val_t **values, size_t *values_cnt, void *p
     vals[1].type = SR_UINT8_T;
     vals[1].data.uint8_val = minuto;
 
-    sr_val_set_xpath(&vals[1], "/alarmafulgor:reloj-sistema/segundo-sistema");
+    sr_val_set_xpath(&vals[2], "/alarmafulgor:reloj-sistema/segundo-sistema");
     vals[2].type = SR_UINT8_T;
     vals[2].data.uint8_val = segundo;
 
@@ -167,9 +170,7 @@ int sr_plugin_init_cb(sr_session_ctx_t *session, void **private_ctx)
 {
 
 
-	hora=3;
-	minuto=44;
-	segundo=5;
+
 
 
     int rc = SR_ERR_OK;
