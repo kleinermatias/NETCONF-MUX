@@ -1,0 +1,64 @@
+module cli_mxp {
+
+    namespace "urn:ietf:params:xml:ns:yang:cli_mxp";
+
+    prefix "rf-ar";
+
+    description
+      "CLI para configurar el muxponder de 40G";
+
+    revision "2018-06-24" {
+        description
+          "Version 1.0.0";
+    }
+
+    container params {
+        description
+          "Parametros de la CLI";
+
+        // @ MUXPONDER: ./muxponder --configuracion --[otu2|xge] --[gfec|cerofec] --[gfec_cliente|cerofec_cliente|nulofec_cliente] --canal "value" --potencia "value" --cd_compensacion "value"
+        // ./muxponder --guardar --[otu2|xge] --[gfec|cerofec] --[gfec_cliente|cerofec_cliente|nulofec_cliente] --canal "value" --potencia "value" --cd_compensacion "value"
+        
+        leaf configuracion {
+            description
+              "para configuración completa en modo muxponder (--configuracion) o guardar configuración en archivo de inicio (--guardar).";
+            type string;
+        }
+
+        leaf tipo_trafico {
+            description
+              "[otu2|xge] especifica el tipo de tráfico.";
+            type string;
+        }
+
+        leaf tipo_fec_linea {
+            description
+              "[gfec|cerofec] especifica el uso de fec.";
+            type string;
+        }
+
+        leaf tipo_fec_cliente {
+            description
+              "[gfec_cliente|cerofec_cliente|nulofec_cliente] especifica el uso de fec.";
+            type string;
+        }
+
+        leaf canal {
+            description
+              "canal especifica el canal óptico del módulo transponder.";
+            type string;
+        }
+
+        leaf potencia {
+            description
+              "potencia especifica la potencia de salida del amplificador óptico (edfa).";
+            type string;
+        }
+
+        leaf cd_compensacion {
+            description
+              "cd_compensacion especifica la compensación de dispersion cromática.";
+            type string;
+        }
+    }
+}
