@@ -1,0 +1,39 @@
+module persona {
+
+    namespace "urn:ietf:params:xml:ns:yang:persona";
+
+    prefix "ps-ar";
+
+    description
+        "Modulo persona para ejemplo NETCONF";
+
+    revision "2018-06-24" {
+        description
+            "Version 1.0.0";
+    }
+
+
+    container human-state {
+        description "Representa el estado de un usuario.";
+
+        config false;
+
+        leaf nombre {
+            description "Nombre de la persona";
+            type string;
+        }
+
+        leaf apellido {
+            description "Apellido de la persona";
+            type string;
+        }
+
+        leaf sleep-boolean {
+            description "Determina si la persona esta durmiendo o no";
+            type boolean;
+        }
+
+
+    }
+
+}
