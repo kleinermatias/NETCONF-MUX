@@ -16,8 +16,8 @@
 
 const char *yang_model = "persona";
 
-volatile char *nombre="Juan";
-volatile char *apellido="Cavanagh";
+char *nombre="Juan";
+char *apellido="Cavanagh";
 volatile bool *duerme=true;
 
 
@@ -38,49 +38,12 @@ typedef struct ctx_s {
 static void *
 oven_thread(void *arg)
 {
-    int rc;
-    rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    char *temp = NULL;
-    char buf[100] = {0};
-    char *response = NULL;
-    unsigned int size = 1;
-    unsigned int strlength;
     
-    strcpy(buf, "tarado e");
-    strlength = strlen(buf);
-    temp = realloc(response, size + strlength);
-    response = temp;
-    strcpy(response + size - 1, buf);
-    size += strlength;
-    sr_val_t values[1];
-    values[0].xpath = "/persona:sonido/source/ringtone";
-    values[0].type = SR_STRING_T;
-    values[0].data.string_val = response;
-
-    while (persona_tid) {
-        time_t rawtime;
-        struct tm *info;
-        char buffer[80];
-        time( &rawtime );
-        info = localtime( &rawtime );
-        strftime(buffer,80,"%x - %I:%M%p", info);
-        hora=info->tm_hour;
-        minuto=info->tm_min;
-        segundo=info->tm_sec;
-        if(hora==hora_alarma && minuto==minuto_alarma && segundo==segundo_alarma)
-        {   
-            printf("%s\n", "ENTRO");
-            rc = sr_event_notif_send(sess, "/persona:sonido", values, 1, SR_EV_NOTIF_DEFAULT);
-                    if (rc != SR_ERR_OK) {
-                        SRP_LOG_ERR("OVEN: Oven-ready notification generation failed: %s.", sr_strerror(rc));
-            
-            }
-            sleep(0.9);
-            persona_tid=0;
-            return NULL; 
-        }
-        sleep(0.9);
-    }
+	duerme=false;
+	sleep(30);
+    printf("%s\n", "A Juan le esta dando suenito...");
+	duerme=true;
+	persona_tid=0;
     return NULL;
 }
 
@@ -125,13 +88,18 @@ event_notif_cb(const sr_ev_notif_type_t notif_type, const char *xpath, const sr_
        time_t timestamp, void *private_ctx)
 {
     /* print notification */
-    printf("\n\n ========== RECEIVED EVENT NOTIFICATION ======%s\n\n", ctime(&timestamp));
+    printf("\n\n ========== SUENA CUMBION ======%s\n\n", ctime(&timestamp));
     printf(">>> Notification content:\n\n");
     for (size_t i = 0; i < value_cnt; ++i) {
         sr_print_val(values+i);
     }
     printf("\n");
 
+    int rc;
+    if (duerme == true && persona_tid==0) {
+        /* the oven should be turned on and is not (create the oven thread) */
+        rc = pthread_create((pthread_t *)&persona_tid, NULL, oven_thread, NULL);
+    } 
     /**
      * Here you would normally handle the notification.
      */
