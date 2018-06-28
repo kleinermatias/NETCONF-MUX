@@ -29,5 +29,5 @@ Fuente: https://tools.ietf.org/html/draft-tp-netconf-datastore-00
 
 
 28-junio
-
-sudo apt-get install gcc-multilib 
+Para ejecutar x32 en x64 (Soluciona problema de no such file or directory)
+> sudo apt-get install gcc-multilib 
