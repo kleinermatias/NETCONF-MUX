@@ -23,3 +23,11 @@ NETCONF define a un datastore (de configuracion) como un lugar conceptual donde 
 > **Nota 2:** La version actual de Sysrepo soporta la operacion < commit > pero no la operacion < cancel-commit >. En otras palabras, el uso del DS candidate esta limitada a ser usada para modificar varios modulos y commitear los cambios (copiar estos cambios a running)  pero no verifica la nueva configuracion y no pueden revertirse los cambios con un < cancel-commit > en caso de error. Como describen en su '[TODO List](https://github.com/sysrepo/sysrepo/wiki/TODO-List)', esta funcionalidad se encuentra en desarrollo. 
 
 Fuente: https://tools.ietf.org/html/draft-tp-netconf-datastore-00
+
+
+
+
+
+28-junio
+
+sudo apt-get install gcc-multilib 
