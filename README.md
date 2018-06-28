@@ -31,3 +31,5 @@ Fuente: https://tools.ietf.org/html/draft-tp-netconf-datastore-00
 28-junio
 Para ejecutar x32 en x64 (Soluciona problema de no such file or directory)
 > sudo apt-get install gcc-multilib 
+
+CC=/home/mkleiner/nios2/embedded/codebench/bin/nios2-linux-gnu-gcc CXX=/home/mkleiner/nios2/embedded/codebench/bin/nios2-linux-gnu-gcc cmake ..
