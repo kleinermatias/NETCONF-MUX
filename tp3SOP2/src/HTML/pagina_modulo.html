@@ -1,0 +1,62 @@
+<!-- Página web con botones que permiten realizar operaciones con los módulos
+del kernel del sistema operativo del sistema embebido. Las operaciones son:
+ - Listado de módulos cargados en el kernel del sistema operativo del embebido. 
+ - Subida de archivo con extensión .ko al servidor, para su posterior inserción
+ en el kernel (para esto último se utiliza el archivo insertar_file.c) -->
+<!-- Autor: López Gastón -->
+
+<html>
+<head>
+
+<title>TP3 Lopez Gaston</title>
+
+</head>
+
+<body>
+<center>
+
+
+</br>
+
+<h1>Trabajo Practico 3 de Sistemas Operativos II</h1>
+
+</br>
+
+<h2>Operaciones sobre modulos</h2>
+</br>
+
+<!-- Botón para listar módulos -->
+<a href="/cgi-bin/listar_modulos.cgi"><button style="FONT-SIZE: 13pt"><p>Listar modulos del sistema</button></a></p>
+
+</br>
+
+<!-- Formulario para insertar módulo (archivo con extension .ko) -->
+
+<h2>Insercion de modulos</h2>
+
+<hr>
+
+
+<form method="post" action="/cgi-bin/upload.cgi" enctype="multipart/form-data">
+
+<h3>Ingrese el modulo a cargar:</h3>
+
+<input name="cargar_modulo" type="file" required/>
+</br>
+</br>
+<input type="submit" value="Subir modulo al servidor">
+</form>
+
+<hr>
+
+</br>
+
+<!-- Volver a la página principal -->
+<a href="index.lighttpd.html"><button style="FONT-SIZE: 13pt"><p>Volver a la Pagina Principal</button></a></p>
+
+</center>
+
+</body>
+
+
+</html>
