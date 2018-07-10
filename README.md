@@ -19,6 +19,14 @@ NETCONF define a un datastore (de configuracion) como un lugar conceptual donde 
 - **Candidate** : Al igual que startup, este datastore es opcional. Es util para manipular datos de configuracion que no son aplicados instantaneamente al dispositivo (como es el caso del datastore running). Los cambios aplicados a esta datastore no son visibles desde otras sesiones hasta que se aplique la operacion < commit > (al aplicar esta operacion, se copia la configuracion desde el DS candidate al DS running). NETCONF reconoce el concepto de "trabajo en curso", por lo que no se aplica validacion de sintaxis en este datastore con respecto a lo que se encuentra definido en el modulo YANG hasta que se haga el commit. Alternativamente, NETCONF provee una operacion para la validacion de sintaxis bajo demanda con < validate > ****(2)***.
 
 > **Nota 1:** En Sysrepo, este DS (running) no sera visible a menos que exista una aplicacion suscripta a los cambios del modulo YANG instalado.
+
+
+EDITAR.
+/root/usrapp/etc/sysrepo/data/
+ADEMAS, HACER ROOT SSH.
+
+
+
 > 
 > **Nota 2:** La version actual de Sysrepo soporta la operacion < commit > pero no la operacion < cancel-commit >. En otras palabras, el uso del DS candidate esta limitada a ser usada para modificar varios modulos y commitear los cambios (copiar estos cambios a running)  pero no verifica la nueva configuracion y no pueden revertirse los cambios con un < cancel-commit > en caso de error. Como describen en su '[TODO List](https://github.com/sysrepo/sysrepo/wiki/TODO-List)', esta funcionalidad se encuentra en desarrollo. 
 
